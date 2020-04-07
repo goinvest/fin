@@ -41,14 +41,15 @@ func IRR(cashflows []float64) float64 {
 	return math.NaN()
 }
 
-// MIRR calcualtes the Modified Internal Rate of Return (MIRR). Cash outflows
-// (COF, negative cashflows), regardless of when they occur, are treated as a
-// cost and discounted using the cost of capital (k). Cash inflows (CIF,
-// positive cashflows) are treated as part of the terminal value, which are
-// compounded using the cost of capital (k).
+// MIRR calculates the Modified Internal Rate of Return (MIRR), which is the
+// discount rate at which the present value of the cash outflows equals the
+// discounted future value of cash inflows—the discounted terminal value. Cash
+// outflows (negative cashflows), regardless of when they occur, are treated as
+// a cost and discounted using the cost of capital (k) to calculate the present
+// value. Cash inflows (positive cashflows) are compounded using the cost of
+// capital (k) to calculate the terminal value.
 //
-// PV Costs = PV Terminal Value
-// ∑(COFt / (1+k)^t) = (∑ [CIF_t * (1+k)^(n-t)]) / (1 + MIRR)^n
+// MIRR = [Future Value Cash Inflows / Present Value Cash Outflows]^(1/n) - 1
 func MIRR(cashflows []float64, k float64) float64 {
 	pvCosts, tv := 0.0, 0.0
 	n := float64(len(cashflows) - 1)

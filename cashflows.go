@@ -18,13 +18,16 @@ func IRR(cashflows []float64) float64 {
 	k0, k1 := 1.0, 0.0
 	for i := 0; i < maxIterations; i++ {
 		k0 = k1
-		f, fdt := 0.0, 0.0
+		f, fdk := 0.0, 0.0
 		for i, cf := range cashflows {
 			t := float64(i)
+			// k = discount rate, which is the IRR
+			// f = NPV = ∑t=0-n: CF_t * (1+k)^-t
+			// fdk = d/dk NPV = ∑t=0-n: -t * CF_t * (1+k)^(-t-1)
 			f += cf * math.Pow(1+k0, -t)
-			fdt -= t * cf * math.Pow(1+k0, -t-1)
+			fdk -= t * cf * math.Pow(1+k0, -t-1)
 		}
-		k1 = k0 - (f / fdt)
+		k1 = k0 - (f / fdk)
 		if math.Abs(k1-k0)/k0 < relError {
 			return k1
 		}

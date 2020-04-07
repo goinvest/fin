@@ -12,6 +12,26 @@ import (
 
 const tolerance = 0.000001
 
+func TestMRR(t *testing.T) {
+	testCases := []struct {
+		cashflows     []float64
+		costOfCapital float64
+		expected      float64
+	}{
+		{[]float64{-1000, 500, 400, 300, 100}, 0.10, 0.121063},
+		{[]float64{-1000, 100, 300, 400, 600}, 0.10, 0.113281},
+		{[]float64{1000, 100, 300, 400, 600}, 0.10, math.Inf(1)},
+	}
+	for _, tc := range testCases {
+		mirr := MIRR(tc.cashflows, tc.costOfCapital)
+		if !math.IsInf(mirr, 1) && !almostEqual(tc.expected, mirr) {
+			t.Errorf("MIRR calculated = %f, expected = %f", mirr, tc.expected)
+		} else if math.IsInf(mirr, 1) && !math.IsInf(tc.expected, 1) {
+			t.Errorf("MIRR = +Inf, exptected = %f", tc.expected)
+		}
+	}
+}
+
 func TestIRR(t *testing.T) {
 	testCases := []struct {
 		cashflows []float64

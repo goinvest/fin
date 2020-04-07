@@ -12,6 +12,24 @@ import (
 
 const tolerance = 0.000001
 
+func TestIRR(t *testing.T) {
+	testCases := []struct {
+		cashflows []float64
+		expected  float64
+	}{
+		{[]float64{-1000, 500, 400, 300, 100}, 0.144888},
+		{[]float64{-1000, 100, 300, 400, 600}, 0.117906},
+	}
+	for _, tc := range testCases {
+		irr := IRR(tc.cashflows)
+		if !math.IsNaN(irr) && !almostEqual(tc.expected, irr) {
+			t.Errorf("IRR calculated = %f, expected = %f", irr, tc.expected)
+		} else if math.IsNaN(irr) && !math.IsNaN(tc.expected) {
+			t.Errorf("IRR = NaN, exptected = %f", tc.expected)
+		}
+	}
+}
+
 func TestDiscountedPaybackPeriod(t *testing.T) {
 	testCases := []struct {
 		cashflows    []float64

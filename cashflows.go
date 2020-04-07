@@ -5,7 +5,27 @@
 
 package fin
 
-import "math"
+import (
+	"math"
+)
+
+// IRR calculates the internal rate of return using the Newton-Raphson method.
+func IRR(cashflows []float64) float64 {
+	// TODO: Should tolerance be a variadic argument to the IRR function?
+	const tolerance = 1e-8
+	k0, k1 := 1.0, 0.0
+	for math.Abs(k1-k0) > tolerance {
+		k0 = k1
+		f, fdt := 0.0, 0.0
+		for i, cf := range cashflows {
+			t := float64(i)
+			f += cf * math.Pow(1+k0, -t)
+			fdt -= t * cf * math.Pow(1+k0, -t-1)
+		}
+		k1 = k0 - (f / fdt)
+	}
+	return k1
+}
 
 // DiscountedPaybackPeriod calculates the expected number of periods required
 // to recover the original investment using the given discount rate. If the

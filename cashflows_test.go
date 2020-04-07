@@ -19,6 +19,7 @@ func TestIRR(t *testing.T) {
 	}{
 		{[]float64{-1000, 500, 400, 300, 100}, 0.144888},
 		{[]float64{-1000, 100, 300, 400, 600}, 0.117906},
+		{[]float64{1000, 100, 300, 400, 600}, math.NaN()},
 	}
 	for _, tc := range testCases {
 		irr := IRR(tc.cashflows)

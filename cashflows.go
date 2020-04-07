@@ -9,12 +9,14 @@ import (
 	"math"
 )
 
-// IRR calculates the internal rate of return using the Newton-Raphson method.
+// IRR calculates the internal rate of return.
 func IRR(cashflows []float64) float64 {
+	// The IRR is calculated using the Newton-Raphson method.
 	// TODO: Should tolerance be a variadic argument to the IRR function?
-	const tolerance = 1e-8
+	const relError = 1e-8
+	const maxIterations = 100
 	k0, k1 := 1.0, 0.0
-	for math.Abs(k1-k0) > tolerance {
+	for i := 0; i < maxIterations; i++ {
 		k0 = k1
 		f, fdt := 0.0, 0.0
 		for i, cf := range cashflows {
@@ -23,8 +25,11 @@ func IRR(cashflows []float64) float64 {
 			fdt -= t * cf * math.Pow(1+k0, -t-1)
 		}
 		k1 = k0 - (f / fdt)
+		if math.Abs(k1-k0)/k0 < relError {
+			return k1
+		}
 	}
-	return k1
+	return math.NaN()
 }
 
 // DiscountedPaybackPeriod calculates the expected number of periods required

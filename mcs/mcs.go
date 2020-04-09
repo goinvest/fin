@@ -52,12 +52,12 @@ type Cashflow struct {
 }
 
 // SetupCFs sets up the cashflows.
-func SetupCFs(setups []CashflowSetup, src rand.Source) ([]Cashflow, error) {
+func SetupCFs(setups []CashflowSetup, seed uint64) ([]Cashflow, error) {
 	// FIXME(mdr): I should probably search for the maximum period and make sure
 	// that each cashflow is the same length.
 	var cashflows []Cashflow
 	for _, setup := range setups {
-		cf, err := NewCF(setup, src)
+		cf, err := NewCF(setup, seed)
 		if err != nil {
 			log.Fatalf("Error creating cash flow: %s", err)
 		}
@@ -70,7 +70,8 @@ func SetupCFs(setups []CashflowSetup, src rand.Source) ([]Cashflow, error) {
 // random distribution for the annual growth rate and the given number of
 // months. The start and end months are one (1) based. The months are the total
 // number of months in the entire simulation.
-func NewCF(cfg CashflowSetup, src rand.Source) (Cashflow, error) {
+func NewCF(cfg CashflowSetup, seed uint64) (Cashflow, error) {
+	src := rand.New(rand.NewSource(seed))
 	if cfg.StartPeriod > cfg.EndPeriod {
 		return Cashflow{}, fmt.Errorf(
 			"start period %d must be less than or equal to end period %d", cfg.StartPeriod, cfg.EndPeriod)
@@ -144,12 +145,25 @@ func (cf *Cashflow) Value(period int) float64 {
 // NetCashflows calculates the net cashflows, cash inflows, and cash outflows
 // for a given number of simulations, number of periods, cashflow
 // distributions, and random source.
-func NetCashflows(cfs []Cashflow, numSims, numPeriods int, src rand.Source) ([]float64, []float64, []float64) {
+func NetCashflows(cfs []Cashflow, sims, cpus, periods int) ([]float64, []float64, []float64) {
+	simsPerCPU := sims / cpus
+	leftovers := sims - cpus*simsPerCPU
+	log.Printf("CPUs = %d / Sims/CPU = %d / Leftover sims = %d", cpus, simsPerCPU, leftovers)
+	cpuSims := make([]int, cpus)
+	for i := 0; i < cpus; i++ {
+		if i < leftovers {
+			cpuSims[i] = simsPerCPU + 1
+		} else {
+			cpuSims[i] = simsPerCPU
+		}
+		log.Printf("CPU %d will run %d sims", i, cpuSims[i])
+	}
+
 	var netCashflows []float64
 	var netOutflows []float64
 	var netInflows []float64
 	// Loop through each simulation
-	for sim := 0; sim < numSims; sim++ {
+	for sim := 0; sim < sims; sim++ {
 		// Reset all growth rates
 		for _, cf := range cfs {
 			cf.RandomizeGrowthRates()
@@ -158,7 +172,7 @@ func NetCashflows(cfs []Cashflow, numSims, numPeriods int, src rand.Source) ([]f
 		netInflow := 0.0
 		netOutflow := 0.0
 		// Loop through each month
-		for period := 1; period <= numPeriods; period++ {
+		for period := 1; period <= periods; period++ {
 			// Sum each cash flow.
 			periodInflows := 0.0
 			periodOutlfows := 0.0

@@ -43,12 +43,12 @@ type CashflowSetup struct {
 
 // Cashflow models a cash flow.
 type Cashflow struct {
-	outflow          bool
-	value            Rander
-	annualGrowthRate Rander
-	Name             string
-	applicableMonths []float64
-	growthRates      []float64
+	outflow           bool
+	value             Rander
+	annualGrowthRate  Rander
+	Name              string
+	applicablePeriods []float64
+	growthRates       []float64
 }
 
 // SetupCFs sets up the cashflows.
@@ -75,7 +75,7 @@ func NewCF(cfg CashflowSetup, src rand.Source) (Cashflow, error) {
 		return Cashflow{}, fmt.Errorf(
 			"start period %d must be less than or equal to end period %d", cfg.StartPeriod, cfg.EndPeriod)
 	}
-	applicableMonths := make([]float64, cfg.EndPeriod)
+	applicablePeriods := make([]float64, cfg.EndPeriod)
 	gr := cfg.Growth.Setup(src)
 	growthRates := make([]float64, cfg.EndPeriod)
 	growthRates[0] = 1.0
@@ -86,20 +86,20 @@ func NewCF(cfg CashflowSetup, src rand.Source) (Cashflow, error) {
 			growthRates[i] = growthRates[i-1]
 		}
 	}
-	for i := 0; i < len(applicableMonths); i++ {
-		applicableMonths[i] = 0.0
+	for i := 0; i < len(applicablePeriods); i++ {
+		applicablePeriods[i] = 0.0
 		if i >= cfg.StartPeriod-1 && i < cfg.EndPeriod {
-			applicableMonths[i] = 1.0
+			applicablePeriods[i] = 1.0
 		}
 	}
-	// log.Printf("%s applicable months = %v", name, applicableMonths)
+	// log.Printf("%s applicable months = %v", name, applicablePeriods)
 	cf := Cashflow{
-		outflow:          cfg.Outflow,
-		value:            cfg.Random.Setup(src),
-		annualGrowthRate: gr,
-		applicableMonths: applicableMonths,
-		growthRates:      growthRates,
-		Name:             cfg.Name,
+		outflow:           cfg.Outflow,
+		value:             cfg.Random.Setup(src),
+		annualGrowthRate:  gr,
+		applicablePeriods: applicablePeriods,
+		growthRates:       growthRates,
+		Name:              cfg.Name,
 	}
 	return cf, nil
 }
@@ -131,8 +131,8 @@ func (cf *Cashflow) PrintGrowthRates() {
 // Value returns a random number for the given period.
 func (cf *Cashflow) Value(period int) float64 {
 	applicable := 0.0
-	if period > 0 && period <= len(cf.applicableMonths) {
-		applicable = cf.applicableMonths[period-1]
+	if period > 0 && period <= len(cf.applicablePeriods) {
+		applicable = cf.applicablePeriods[period-1]
 	}
 	growthRate := 1.0
 	if period > 0 && period <= len(cf.growthRates) {
@@ -141,8 +141,9 @@ func (cf *Cashflow) Value(period int) float64 {
 	return cf.value.Rand() * applicable * growthRate
 }
 
-// NetCashflows calculates the net cash flows for the number of simulations,
-// cashflows, and random source.
+// NetCashflows calculates the net cashflows, cash inflows, and cash outflows
+// for a given number of simulations, number of periods, cashflow
+// distributions, and random source.
 func NetCashflows(cfs []Cashflow, numSims, numPeriods int, src rand.Source) ([]float64, []float64, []float64) {
 	var netCashflows []float64
 	var netOutflows []float64

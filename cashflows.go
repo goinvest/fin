@@ -46,8 +46,9 @@ func IRR(cashflows []float64) float64 {
 // discounted future value of cash inflows—the discounted terminal value. Cash
 // outflows (negative cashflows), regardless of when they occur, are treated as
 // a cost and discounted using the cost of capital (k) to calculate the present
-// value. Cash inflows (positive cashflows) are compounded using the cost of
-// capital (k) to calculate the terminal value.
+// value. Cash inflows (positive cashflows) are reinvested at the cost of
+// capital (k), so cash inflows are compounded using the cost of capital (k) to
+// calculate the terminal value.
 //
 // MIRR = [Future Value Cash Inflows / Present Value Cash Outflows]^(1/n) - 1
 func MIRR(cashflows []float64, k float64) float64 {

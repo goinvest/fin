@@ -117,18 +117,6 @@ func (cf *Cashflow) RandomizeGrowthRates() {
 	}
 }
 
-// PrintGrowthRates prints the growth rates for the cash flow.
-func (cf *Cashflow) PrintGrowthRates() {
-	// FIXME(mdr): Instead of printed, I should return a string or take advantage
-	// of a Go interface.
-	str := "["
-	for _, rate := range cf.growthRates {
-		str += fmt.Sprintf("%.3f ", rate)
-	}
-	str += "]"
-	fmt.Printf("%s growth = %s\n", cf.Name, str)
-}
-
 // Value returns a random number for the given period.
 func (cf *Cashflow) Value(period int) float64 {
 	applicable := 0.0
@@ -145,10 +133,9 @@ func (cf *Cashflow) Value(period int) float64 {
 // NetCashflows calculates the net cashflows, cash inflows, and cash outflows
 // for a given number of simulations, number of periods, cashflow
 // distributions, and random source.
-func NetCashflows(cfs []Cashflow, sims, cpus, periods int) ([]float64, []float64, []float64) {
+func NetCashflows(sims, cpus, periods int, seed uint64, setups []CashflowSetup) ([]float64, []float64, []float64) {
 	simsPerCPU := sims / cpus
 	leftovers := sims - cpus*simsPerCPU
-	log.Printf("CPUs = %d / Sims/CPU = %d / Leftover sims = %d", cpus, simsPerCPU, leftovers)
 	cpuSims := make([]int, cpus)
 	for i := 0; i < cpus; i++ {
 		if i < leftovers {
@@ -156,12 +143,41 @@ func NetCashflows(cfs []Cashflow, sims, cpus, periods int) ([]float64, []float64
 		} else {
 			cpuSims[i] = simsPerCPU
 		}
-		log.Printf("CPU %d will run %d sims", i, cpuSims[i])
 	}
 
+	ch := make(chan inOutflow, cpus)
+
+	// Start the simulation in a goroutine for each CPU.
+	for cpu := 0; cpu < cpus; cpu++ {
+		cpuSeed := seed + uint64(cpu*100)
+		go sim(cpuSims[cpu], periods, cpuSeed, ch, setups)
+	}
+
+	// Assemble the results
 	var netCashflows []float64
 	var netOutflows []float64
 	var netInflows []float64
+	var result inOutflow
+	for i := 0; i < sims; i++ {
+		result = <-ch
+		netCashflows = append(netCashflows, result.in-result.out)
+		netInflows = append(netInflows, result.in)
+		netOutflows = append(netOutflows, result.out)
+	}
+
+	return netCashflows, netInflows, netOutflows
+}
+
+type inOutflow struct {
+	in  float64
+	out float64
+}
+
+func sim(sims, periods int, seed uint64, ch chan inOutflow, setups []CashflowSetup) {
+	cfs, err := SetupCFs(setups, seed)
+	if err != nil {
+		log.Printf("error: %s", err)
+	}
 	// Loop through each simulation
 	for sim := 0; sim < sims; sim++ {
 		// Reset all growth rates
@@ -188,11 +204,11 @@ func NetCashflows(cfs []Cashflow, sims, cpus, periods int) ([]float64, []float64
 			netOutflow += periodOutlfows
 			netCashflow += periodInflows - periodOutlfows
 		}
-		netCashflows = append(netCashflows, netCashflow)
-		netInflows = append(netInflows, netInflow)
-		netOutflows = append(netOutflows, netOutflow)
+		ch <- inOutflow{
+			in:  netInflow,
+			out: netOutflow,
+		}
 	}
-	return netCashflows, netInflows, netOutflows
 }
 
 // NoGrowth is used to model no growth of a distribution.

@@ -6,13 +6,13 @@
 package mcs
 
 import (
-	"fmt"
 	"log"
 
 	"golang.org/x/exp/rand"
 	"gonum.org/v1/gonum/stat/distuv"
 
 	"github.com/goinvest/distuvx"
+	"github.com/goinvest/seq"
 )
 
 // Rander is the interface for the Rand method.
@@ -30,34 +30,42 @@ type Setuper interface {
 	Setup(src rand.Source) Rander
 }
 
-// CashflowSetup models the setup information needed for a cashflow for the
+// Cashflow models the setup information needed for a cashflow for the
 // Monte Carlo simulation.
-type CashflowSetup struct {
-	Outflow     bool
-	StartPeriod int
-	EndPeriod   int
-	Random      Setuper
-	Growth      Setuper
-	Name        string
+type Cashflow struct {
+	Outflow bool
+	Periods string
+	Dist    Setuper
+	Growth  Growth
+	Name    string
 }
 
-// Cashflow models a cash flow.
-type Cashflow struct {
+// Growth models the setup information for a Growth rate.
+type Growth struct {
+	Periods string
+	Dist    Setuper
+	Name    string
+}
+
+// cashflow models a cash flow.
+type cashflow struct {
 	outflow           bool
+	start             int
+	end               int
 	value             Rander
-	annualGrowthRate  Rander
+	growthRate        Rander
 	Name              string
 	applicablePeriods []float64
+	growthPeriods     []int
 	growthRates       []float64
 }
 
-// SetupCFs sets up the cashflows.
-func SetupCFs(setups []CashflowSetup, seed uint64) ([]Cashflow, error) {
-	// FIXME(mdr): I should probably search for the maximum period and make sure
-	// that each cashflow is the same length.
-	var cashflows []Cashflow
+// setupCFs sets up the cashflows.
+func setupCFs(start, end int, seed uint64, setups []Cashflow) ([]cashflow, error) {
+	periods := end - start + 1
+	cashflows := make([]cashflow, periods)
 	for _, setup := range setups {
-		cf, err := NewCF(setup, seed)
+		cf, err := newCF(start, end, seed, setup)
 		if err != nil {
 			log.Fatalf("Error creating cash flow: %s", err)
 		}
@@ -66,59 +74,62 @@ func SetupCFs(setups []CashflowSetup, seed uint64) ([]Cashflow, error) {
 	return cashflows, nil
 }
 
-// NewCF creates a new cash flow for a given random distribution with another
-// random distribution for the annual growth rate and the given number of
-// months. The start and end months are one (1) based. The months are the total
-// number of months in the entire simulation.
-func NewCF(cfg CashflowSetup, seed uint64) (Cashflow, error) {
+// newCF creates a new cash flow for a given random distribution with another
+// random distribution for the growth rate and the given number of periods.
+func newCF(start, end int, seed uint64, cfg Cashflow) (cashflow, error) {
+	// Seed the random numbers
 	src := rand.New(rand.NewSource(seed))
-	if cfg.StartPeriod > cfg.EndPeriod {
-		return Cashflow{}, fmt.Errorf(
-			"start period %d must be less than or equal to end period %d", cfg.StartPeriod, cfg.EndPeriod)
+
+	// Setup the applicable periods.
+	applicablePeriods, err := calcPeriods(start, end, cfg.Periods)
+	if err != nil {
+		return cashflow{}, err
 	}
-	applicablePeriods := make([]float64, cfg.EndPeriod)
-	gr := cfg.Growth.Setup(src)
-	growthRates := make([]float64, cfg.EndPeriod)
-	growthRates[0] = 1.0
-	for i := 1; i < len(growthRates); i++ {
-		if i%12 == 0 {
-			growthRates[i] = growthRates[i-1] * (1 + gr.Rand())
-		} else {
-			growthRates[i] = growthRates[i-1]
+
+	// Setup the growth rates if applicable.
+	growthPeriods, err := seq.Parse(cfg.Growth.Periods)
+	if err != nil {
+		return cashflow{}, err
+	}
+
+	var growthRates []float64
+	if cfg.Growth == (Growth{}) {
+		growthRates, err = calcGrowthPeriods(start, end, src, cfg.Growth)
+		if err != nil {
+			return cashflow{}, err
 		}
 	}
-	for i := 0; i < len(applicablePeriods); i++ {
-		applicablePeriods[i] = 0.0
-		if i >= cfg.StartPeriod-1 && i < cfg.EndPeriod {
-			applicablePeriods[i] = 1.0
-		}
-	}
-	// log.Printf("%s applicable months = %v", name, applicablePeriods)
-	cf := Cashflow{
+
+	cf := cashflow{
 		outflow:           cfg.Outflow,
-		value:             cfg.Random.Setup(src),
-		annualGrowthRate:  gr,
-		applicablePeriods: applicablePeriods,
-		growthRates:       growthRates,
+		start:             start,
+		end:               end,
+		value:             cfg.Dist.Setup(src),
+		growthRate:        cfg.Growth.Dist.Setup(src),
 		Name:              cfg.Name,
+		applicablePeriods: applicablePeriods,
+		growthPeriods:     growthPeriods,
+		growthRates:       growthRates,
 	}
 	return cf, nil
 }
 
 // RandomizeGrowthRates randomizes the growth rates.
-func (cf *Cashflow) RandomizeGrowthRates() {
-	cf.growthRates[0] = 1.0
-	for i := 1; i < len(cf.growthRates); i++ {
-		if i%12 == 0 {
-			cf.growthRates[i] = cf.growthRates[i-1] * (1 + cf.annualGrowthRate.Rand())
-		} else {
-			cf.growthRates[i] = cf.growthRates[i-1]
+func (cf *cashflow) RandomizeGrowthRates() {
+	numPeriods := cf.end - cf.start + 1
+	lastGrowthRate := 1.0
+	for i := 0; i < numPeriods; i++ {
+		for _, growthPeriod := range cf.growthPeriods {
+			if cf.start+i == growthPeriod {
+				lastGrowthRate *= 1 + cf.growthRate.Rand()
+			}
 		}
+		cf.growthRates[i] = lastGrowthRate
 	}
 }
 
 // Value returns a random number for the given period.
-func (cf *Cashflow) Value(period int) float64 {
+func (cf *cashflow) Value(period int) float64 {
 	applicable := 0.0
 	if period > 0 && period <= len(cf.applicablePeriods) {
 		applicable = cf.applicablePeriods[period-1]
@@ -133,24 +144,14 @@ func (cf *Cashflow) Value(period int) float64 {
 // NetCashflows calculates the net cashflows, cash inflows, and cash outflows
 // for a given number of simulations, number of periods, cashflow
 // distributions, and random source.
-func NetCashflows(sims, cpus, periods int, seed uint64, setups []CashflowSetup) ([]float64, []float64, []float64) {
-	simsPerCPU := sims / cpus
-	leftovers := sims - cpus*simsPerCPU
-	cpuSims := make([]int, cpus)
-	for i := 0; i < cpus; i++ {
-		if i < leftovers {
-			cpuSims[i] = simsPerCPU + 1
-		} else {
-			cpuSims[i] = simsPerCPU
-		}
-	}
+func NetCashflows(sims, cpus, start, end int, seed uint64, cfs []Cashflow) ([]float64, []float64, []float64) {
 
+	// Start the simulations in a goroutine for each CPU.
+	simsPerCPU := calcSimsPerCPU(sims, cpus)
 	ch := make(chan inOutflow, cpus)
-
-	// Start the simulation in a goroutine for each CPU.
 	for cpu := 0; cpu < cpus; cpu++ {
 		cpuSeed := seed + uint64(cpu*100)
-		go sim(cpuSims[cpu], periods, cpuSeed, ch, setups)
+		go sim(simsPerCPU[cpu], start, end, cpuSeed, ch, cfs)
 	}
 
 	// Assemble the results
@@ -168,16 +169,32 @@ func NetCashflows(sims, cpus, periods int, seed uint64, setups []CashflowSetup) 
 	return netCashflows, netInflows, netOutflows
 }
 
+func calcSimsPerCPU(sims, cpus int) []int {
+	minSimsPerCPU := sims / cpus
+	leftovers := sims - cpus*minSimsPerCPU
+	simsPerCPU := make([]int, cpus)
+	for i := 0; i < cpus; i++ {
+		if i < leftovers {
+			simsPerCPU[i] = minSimsPerCPU + 1
+		} else {
+			simsPerCPU[i] = minSimsPerCPU
+		}
+	}
+	return simsPerCPU
+}
+
 type inOutflow struct {
 	in  float64
 	out float64
 }
 
-func sim(sims, periods int, seed uint64, ch chan inOutflow, setups []CashflowSetup) {
-	cfs, err := SetupCFs(setups, seed)
+func sim(sims, start, end int, seed uint64, ch chan inOutflow, setups []Cashflow) {
+	// Setup each cashflow.
+	cfs, err := setupCFs(start, end, seed, setups)
 	if err != nil {
 		log.Printf("error: %s", err)
 	}
+
 	// Loop through each simulation
 	for sim := 0; sim < sims; sim++ {
 		// Reset all growth rates
@@ -187,8 +204,8 @@ func sim(sims, periods int, seed uint64, ch chan inOutflow, setups []CashflowSet
 		netCashflow := 0.0
 		netInflow := 0.0
 		netOutflow := 0.0
-		// Loop through each month
-		for period := 1; period <= periods; period++ {
+		// Loop through each period
+		for period := start; period <= end; period++ {
 			// Sum each cash flow.
 			periodInflows := 0.0
 			periodOutlfows := 0.0
@@ -275,4 +292,44 @@ func (p PERT) Setup(src rand.Source) Rander {
 		panic("wrong number of PERT arguments")
 	}
 	return distuvx.NewPERT(p[0], p[2], p[1], src)
+}
+
+func calcPeriods(start, end int, s string) ([]float64, error) {
+	numPeriods := end - start + 1
+	applicablePeriods := make([]float64, numPeriods)
+
+	// Parse the applicable periods for the cashflow.
+	periods, err := seq.Parse(s)
+	if err != nil {
+		return nil, err
+	}
+
+	// Setup the applicable periods for this cashflow.
+	for _, period := range periods {
+		applicablePeriods[period-start] = 1.0
+	}
+	return applicablePeriods, nil
+}
+
+func calcGrowthPeriods(start, end int, src rand.Source, g Growth) ([]float64, error) {
+	numPeriods := end - start + 1
+	growthRates := make([]float64, numPeriods)
+
+	// Parse the applicable periods for the growth.
+	periods, err := seq.Parse(g.Periods)
+	if err != nil {
+		return nil, err
+	}
+
+	gr := g.Dist.Setup(src)
+	lastGrowthRate := 1.0
+	for i := 0; i < numPeriods; i++ {
+		for _, period := range periods {
+			if start+i == period {
+				lastGrowthRate *= 1 + gr.Rand()
+			}
+		}
+		growthRates[i] = lastGrowthRate
+	}
+	return growthRates, nil
 }

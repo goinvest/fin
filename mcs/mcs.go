@@ -25,9 +25,9 @@ type Valuer interface {
 	Value(period int) float64
 }
 
-// Setuper is the interface for the Setup method.
-type Setuper interface {
-	Setup(src rand.Source) Rander
+// Randomizer is the interface for the Setup method.
+type Randomizer interface {
+	Randomize(src rand.Source) Rander
 }
 
 // Cashflow models the setup information needed for a cashflow for the
@@ -35,7 +35,7 @@ type Setuper interface {
 type Cashflow struct {
 	Outflow bool
 	Periods string
-	Dist    Setuper
+	Dist    Randomizer
 	Growth  Growth
 	Name    string
 }
@@ -43,7 +43,7 @@ type Cashflow struct {
 // Growth models the setup information for a Growth rate.
 type Growth struct {
 	Periods string
-	Dist    Setuper
+	Dist    Randomizer
 	Name    string
 }
 
@@ -65,9 +65,10 @@ func setupCFs(start, end int, seed uint64, setups []Cashflow) ([]cashflow, error
 	periods := end - start + 1
 	cashflows := make([]cashflow, periods)
 	for _, setup := range setups {
+		log.Printf("%s CF / Period string: %s", setup.Name, setup.Periods)
 		cf, err := newCF(start, end, seed, setup)
 		if err != nil {
-			log.Fatalf("Error creating cash flow: %s", err)
+			log.Fatalf("error creating %s cash flow: %s", setup.Name, err)
 		}
 		cashflows = append(cashflows, cf)
 	}
@@ -104,8 +105,8 @@ func newCF(start, end int, seed uint64, cfg Cashflow) (cashflow, error) {
 		outflow:           cfg.Outflow,
 		start:             start,
 		end:               end,
-		value:             cfg.Dist.Setup(src),
-		growthRate:        cfg.Growth.Dist.Setup(src),
+		value:             cfg.Dist.Randomize(src),
+		growthRate:        cfg.Growth.Dist.Randomize(src),
 		Name:              cfg.Name,
 		applicablePeriods: applicablePeriods,
 		growthPeriods:     growthPeriods,
@@ -145,6 +146,9 @@ func (cf *cashflow) Value(period int) float64 {
 // for a given number of simulations, number of periods, cashflow
 // distributions, and random source.
 func NetCashflows(sims, cpus, start, end int, seed uint64, cfs []Cashflow) ([]float64, []float64, []float64) {
+
+	// FIXME: Need to setup each cashflow except for the rand.Source, since those
+	// need to be created within each goroutine.
 
 	// Start the simulations in a goroutine for each CPU.
 	simsPerCPU := calcSimsPerCPU(sims, cpus)
@@ -234,8 +238,8 @@ var NoGrowth = Fixed(0.0)
 // Triangle is a triangle distribution with the values min, mode, max.
 type Triangle []float64
 
-// Setup sets up a new triangle distribution.
-func (t Triangle) Setup(src rand.Source) Rander {
+// Randomize sets up a new triangle distribution.
+func (t Triangle) Randomize(src rand.Source) Rander {
 	if len(t) != 3 {
 		return distuv.NewTriangle(1, 0, 0, src)
 	}
@@ -245,8 +249,8 @@ func (t Triangle) Setup(src rand.Source) Rander {
 // Fixed is a fixed number.
 type Fixed float64
 
-// Setup a new fixed number.
-func (f Fixed) Setup(src rand.Source) Rander {
+// Randomize a new fixed number.
+func (f Fixed) Randomize(src rand.Source) Rander {
 	return distuvx.NewFixed(float64(f))
 }
 
@@ -254,8 +258,8 @@ func (f Fixed) Setup(src rand.Source) Rander {
 // each time.
 type TriangleOne []float64
 
-// Setup sets up a new one-time only triangle distribution.
-func (t TriangleOne) Setup(src rand.Source) Rander {
+// Randomize sets up a new one-time only triangle distribution.
+func (t TriangleOne) Randomize(src rand.Source) Rander {
 	if len(t) != 3 {
 		return distuv.NewTriangle(1, 0, 0, src)
 	}
@@ -266,8 +270,8 @@ func (t TriangleOne) Setup(src rand.Source) Rander {
 // Uniform is a uniform distribution with the values min and max.
 type Uniform []float64
 
-// Setup sets up a new uniform distribution.
-func (u Uniform) Setup(src rand.Source) Rander {
+// Randomize sets up a new uniform distribution.
+func (u Uniform) Randomize(src rand.Source) Rander {
 	if len(u) != 2 {
 		panic("wrong number of uniform arguments")
 	}
@@ -286,8 +290,8 @@ func (u Uniform) Setup(src rand.Source) Rander {
 // PERT setups up a new PERT distribution.
 type PERT []float64
 
-// Setup sets up a new triangle distribution.
-func (p PERT) Setup(src rand.Source) Rander {
+// Randomize sets up a new triangle distribution.
+func (p PERT) Randomize(src rand.Source) Rander {
 	if len(p) != 3 {
 		panic("wrong number of PERT arguments")
 	}
@@ -321,7 +325,7 @@ func calcGrowthPeriods(start, end int, src rand.Source, g Growth) ([]float64, er
 		return nil, err
 	}
 
-	gr := g.Dist.Setup(src)
+	gr := g.Dist.Randomize(src)
 	lastGrowthRate := 1.0
 	for i := 0; i < numPeriods; i++ {
 		for _, period := range periods {

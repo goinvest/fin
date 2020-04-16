@@ -58,7 +58,6 @@ func NetCashflows(sims, cpus, start, end int, seed uint64, cfs []Cashflow) ([]fl
 		// Don't use the same seed for each CPU, but we still want reproducible
 		// results if a non-random seed is provided.
 		cpuSeed := seed * uint64(cpu*5000000)
-		log.Printf("CPU %d will perform %d simulations(seed = %d)", cpu, simsPerCPU[cpu], cpuSeed)
 		go simulate(cpu, simsPerCPU[cpu], start, end, cpuSeed, ch, nonrandomCFs)
 	}
 
@@ -83,7 +82,6 @@ type inOutflow struct {
 }
 
 func simulate(cpu, sims, start, end int, seed uint64, ch chan inOutflow, nrcfs []nrcf) {
-	log.Printf("CPU %d / seed = %d", cpu, seed)
 	periods := end - start + 1
 	// Setup each random cashflow.
 	randomCFs, err := setupRCFs(cpu, seed, nrcfs)
@@ -98,21 +96,20 @@ func simulate(cpu, sims, start, end int, seed uint64, ch chan inOutflow, nrcfs [
 		// Loop through each period
 		for i := 0; i < periods; i++ {
 			// Sum each cash flow.
-			periodInflows := 0.0
-			periodOutlfows := 0.0
-			for _, rcf := range randomCFs {
-				val := rcf.value(i)
+			for j := 0; j < len(randomCFs); j++ {
+				val := randomCFs[j].value(i)
+				// if j == 1 {
+				// 	log.Printf("%s [%d] on CPU %d = %f", rcf.name, i+start, cpu, val)
+				// }
 				// if i == 0 && j == 0 {
 				// 	log.Printf("%s [%d] on CPU %d = %f", rcf.name, i+start, cpu, val)
 				// }
-				if rcf.outflow {
-					periodOutlfows += val
+				if randomCFs[j].outflow {
+					netOutflows += val
 				} else {
-					periodInflows += val
+					netInflows += val
 				}
 			}
-			netInflows += periodInflows
-			netOutflows += periodOutlfows
 		}
 		// Send the inflow and outflow for this simulation to the channel.
 		ch <- inOutflow{

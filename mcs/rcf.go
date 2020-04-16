@@ -68,11 +68,17 @@ func newRCF(src rand.Source, nonrandomCF nrcf) (rcf, error) {
 // value returns a random number for the period index (as opposed for the given
 // period).
 func (cf *rcf) value(i int) float64 {
+	// If we're grabbing the value from the first period, reset the growth rate.
+	if i == 0 {
+		cf.lastGrowthRate = 1.0
+	}
 	if !cf.applicable[i] {
 		return 0.0
 	}
+	gr := cf.lastGrowthRate
 	if cf.grow[i] {
-		cf.lastGrowthRate *= (1 + cf.growth.Rand())
+		gr *= (1.0 + cf.growth.Rand())
 	}
+	cf.lastGrowthRate = gr
 	return cf.dist.Rand() * cf.lastGrowthRate
 }

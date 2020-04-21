@@ -2,8 +2,6 @@ github.com/ajstarks/svgo v0.0.0-20180226025133-644b8db467af/go.mod h1:K08gAheRH3
 github.com/fogleman/gg v1.2.1-0.20190220221249-0403632d5b90/go.mod h1:R/bRT+9gY/C5z7JzPU0zXsXHKM4/ayA+zqcVNZzPa1k=
 github.com/goinvest/distuvx v0.2.0 h1:8p8lQvT7bQ88Sz8IV48giL6F5xVMcJ/VdRZjYTbB0LE=
 github.com/goinvest/distuvx v0.2.0/go.mod h1:HBGfLUPW/xkka7ndOk/7Qeh1Y3vs2Uy3OjENPGJ4Mfw=
-github.com/goinvest/seq v0.2.0 h1:3+2QvAaF0In93h1OvOUE9UC+CqZ4H3ArM66LyUT7eoM=
-github.com/goinvest/seq v0.2.0/go.mod h1:4hONCkuQ0Z3C11Z9nB+97gzUBKZgRiZgqbC9fXdkuIQ=
 github.com/goinvest/seq v0.2.1 h1:tlRavb9XYanzIEceEbrfHTixGc4vcBpp/ZoG6vVCSQQ=
 github.com/goinvest/seq v0.2.1/go.mod h1:4hONCkuQ0Z3C11Z9nB+97gzUBKZgRiZgqbC9fXdkuIQ=
 github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0/go.mod h1:E/TSTwGwJL78qG/PmXZO1EjYhfJinVAhrmmHX6Z8B9k=

@@ -23,8 +23,7 @@ type rcf struct {
 }
 
 // setupRCFs sets up the random cashflows (RCFs).
-func setupRCFs(cpu int, seed uint64, nrcfs []nrcf) ([]rcf, error) {
-	src := rand.New(rand.NewSource(seed))
+func setupRCFs(cpu int, src rand.Source, nrcfs []nrcf) ([]rcf, error) {
 	var rcfs []rcf
 	for _, cashflow := range nrcfs {
 		cf, err := newRCF(src, cashflow)

@@ -84,7 +84,8 @@ type inOutflow struct {
 func simulate(cpu, sims, start, end int, seed uint64, ch chan inOutflow, nrcfs []nrcf) {
 	periods := end - start + 1
 	// Setup each random cashflow.
-	randomCFs, err := setupRCFs(cpu, seed, nrcfs)
+	src := rand.New(rand.NewSource(seed))
+	randomCFs, err := setupRCFs(cpu, src, nrcfs)
 	if err != nil {
 		log.Printf("error: %s", err)
 	}
@@ -93,11 +94,19 @@ func simulate(cpu, sims, start, end int, seed uint64, ch chan inOutflow, nrcfs [
 	for sim := 0; sim < sims; sim++ {
 		netInflows := 0.0
 		netOutflows := 0.0
-		// Loop through each period
+		// Loop through each period using the period index not the period number
+		// (i.e., the index always starts at 0, whereas the period could start at
+		// 0, 1, or a different number).
 		for i := 0; i < periods; i++ {
-			// Sum each cash flow.
+			// Loop through each cashflow summing the outflows and inflows
+			// separately. Since the call to value(i) has the side effect of changing
+			// the randomCFs[j], we need to iterate using the index instead of using
+			// the value from range.
 			for j := 0; j < len(randomCFs); j++ {
 				val := randomCFs[j].value(i)
+				// if i == 0 {
+				// 	log.Printf("%s [%d] on CPU %d = %f", randomCFs[j].name, i+start, cpu, val)
+				// }
 				// if j == 1 {
 				// 	log.Printf("%s [%d] on CPU %d = %f", rcf.name, i+start, cpu, val)
 				// }

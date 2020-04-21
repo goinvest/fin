@@ -19,9 +19,6 @@ func (f Fixed) Randomize(src rand.Source) Rander {
 	return distuvx.NewFixed(float64(f))
 }
 
-// NoGrowth is used to model no growth of a distribution.
-var NoGrowth = Fixed(0.0)
-
 // PERT setups up a new PERT distribution.
 type PERT []float64
 

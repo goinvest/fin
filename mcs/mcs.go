@@ -41,7 +41,12 @@ type Growth struct {
 // NetCashflows calculates the net cashflows, cash inflows, and cash outflows
 // for a given number of simulations, number of periods, cashflow
 // distributions, and random source.
-func NetCashflows(sims, cpus, start, end int, seed uint64, cfs []Cashflow) ([]float64, []float64, []float64) {
+func NetCashflows(cfg Config, seed uint64, cpus int) ([]float64, []float64, []float64) {
+	sims := cfg.Sims
+	start := cfg.StartPeriod
+	end := cfg.EndPeriod
+	cfs := cfg.Cashflows
+
 	// FIXME(mdr): Should probably return a slice of slices instead of three
 	// []float64. Should also include error in return.
 

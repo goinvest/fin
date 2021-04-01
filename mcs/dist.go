@@ -22,7 +22,7 @@ func (f Fixed) Randomize(src rand.Source) Rander {
 // PERT setups up a new PERT distribution.
 type PERT []float64
 
-// Randomize sets up a new triangle distribution.
+// Randomize sets up a new PERT distribution.
 func (p PERT) Randomize(src rand.Source) Rander {
 	if len(p) != 3 {
 		panic("wrong number of PERT arguments")

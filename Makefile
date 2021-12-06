@@ -3,13 +3,17 @@ help:
 	@echo ""
 	@echo "  check         Format, lint, vet, and test Go code"
 	@echo "  cover         Show test coverage in html"
+	@echo "  lint          Lint Go code using staticcheck"
 
 check:
-	@echo 'Formatting, linting, vetting, and testing Go code'
+	@echo 'Formatting, vetting, and testing Go code'
 	go fmt ./...
-	golint ./...
 	go vet ./...
 	go test ./...
+
+lint:
+	@echo 'Linting code using staticcheck'
+	staticcheck -f stylish ./...
 
 cover:
 	@echo 'Test coverage in html'

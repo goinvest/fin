@@ -15,7 +15,7 @@ import (
 // flows are reinvested at the IRR, which is why the Modified IRR (MIRR) is
 // preferred.
 //
-// NPV = 0 = ∑(CF_t / (1 + IRR)^t) for t=0...n
+// NPV = 0 = ∑(CF_n / (1 + IRR)^n) for n=0...N
 func IRR(cashflows []float64) float64 {
 	// The IRR is calculated using the Newton-Raphson method.
 	// TODO: Should tolerance be a variadic argument to the IRR function?
@@ -26,12 +26,12 @@ func IRR(cashflows []float64) float64 {
 		k0 = k1
 		f, fdk := 0.0, 0.0
 		for i, cf := range cashflows {
-			t := float64(i)
+			n := float64(i)
 			// k = discount rate, which is the IRR
-			// f = NPV = ∑t=0-n: CF_t * (1+k)^-t
-			// fdk = d/dk NPV = ∑t=0-n: -t * CF_t * (1+k)^(-t-1)
-			f += cf * math.Pow(1+k0, -t)
-			fdk -= t * cf * math.Pow(1+k0, -t-1)
+			// f = NPV = ∑n=0-N: CF_n * (1+k)^-n
+			// fdk = d/dk NPV = ∑n=0-N: -n * CF_n * (1+k)^(-n-1)
+			f += cf * math.Pow(1+k0, -n)
+			fdk -= n * cf * math.Pow(1+k0, -n-1)
 		}
 		k1 = k0 - (f / fdk)
 		if math.Abs(k1-k0)/k0 < relError {

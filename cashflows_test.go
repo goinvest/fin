@@ -12,7 +12,7 @@ import (
 
 const tolerance = 0.000001
 
-func TestMRR(t *testing.T) {
+func TestMIRR(t *testing.T) {
 	testCases := []struct {
 		cashflows     []float64
 		costOfCapital float64

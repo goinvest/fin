@@ -6,21 +6,32 @@
 package fin
 
 import (
-	"log"
 	"math"
 )
+
+type IRROptions struct {
+	RelError      float64
+	MaxIterations int
+}
 
 // IRR calculates the Internal Rate of Return (IRR), which is the discount rate
 // for which the Net Present Value (NPV) equals zero. The IRR assumes that cash
 // flows are reinvested at the IRR, which is why the Modified IRR (MIRR) is
-// preferred.
+// preferred. The IRR is calculated using the Newton-Raphson method. Call
+// without the optional struct to use the defaults of 1e-8 for the relative
+// error and 100 for the max iterations.
 //
 // NPV = 0 = ∑(CF_n / (1 + IRR)^n) for n=0...N
-func IRR(cashflows []float64) float64 {
+func IRR(cashflows []float64, opts ...IRROptions) float64 {
 	// The IRR is calculated using the Newton-Raphson method.
-	// TODO: Should tolerance be a variadic argument to the IRR function?
-	const relError = 1e-8
-	const maxIterations = 100
+	relError := 1e-8
+	maxIterations := 100
+	if len(opts) > 0 && opts[0].RelError != 0.0 {
+		relError = opts[0].RelError
+	}
+	if len(opts) > 0 && opts[0].MaxIterations != 0 {
+		maxIterations = opts[0].MaxIterations
+	}
 	k0, k1 := 1.0, 0.0
 	for i := 0; i < maxIterations; i++ {
 		k0 = k1
@@ -64,7 +75,6 @@ func MIRR(cashflows []float64, k float64) float64 {
 			pvCosts -= cf / math.Pow(1+k, t)
 		}
 	}
-	log.Printf("PV costs = %f / TV = %f", pvCosts, tv)
 	return math.Pow(tv/pvCosts, 1/n) - 1
 }
 

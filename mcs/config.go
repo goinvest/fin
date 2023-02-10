@@ -7,7 +7,7 @@ package mcs
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 )
 
 // Config models the net cashflows configuration information.
@@ -16,13 +16,15 @@ type Config struct {
 	StartPeriod int        `json:"startPeriod"`
 	EndPeriod   int        `json:"endPeriod"`
 	Sims        int        `json:"sims"`
+	Seed        uint64     `json:"seed"`
+	NumCPUs     int        `json:"cpus"`
 	Cashflows   []Cashflow `json:"cashflows"`
 }
 
 // ParseFile parses the JSON configuration file into a Config struct.
 func ParseFile(filename string) (Config, error) {
 	var c Config
-	b, err := ioutil.ReadFile(filename)
+	b, err := os.ReadFile(filename)
 	if err != nil {
 		return c, err
 	}

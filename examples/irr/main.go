@@ -8,12 +8,12 @@ package main
 import (
 	"log"
 
-	"github.com/goinvest/fin"
+	"github.com/goinvest/fin/cf"
 )
 
 func main() {
 
 	cashflows := []float64{-1000, 500, 400, 300, 100}
-	irr := fin.IRR(cashflows)
+	irr := cf.IRR(cashflows)
 	log.Printf("IRR = %f", irr)
 }

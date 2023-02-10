@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2022 The goinvest/fin developers. All rights reserved.
+// Copyright (c) 2019-2023 The goinvest/fin developers. All rights reserved.
 // Project site: https://github.com/goinvest/fin
 // Use of this source code is governed by a MIT-style license that
 // can be found in the LICENSE file for the project.
@@ -33,6 +33,25 @@ func TestMIRR(t *testing.T) {
 }
 
 func TestIRR(t *testing.T) {
+	testCases := []struct {
+		cashflows []float64
+		expected  float64
+		options   IRROptions
+	}{
+		{[]float64{-1000, 500, 400, 300, 100}, 0.144888, IRROptions{1e-5, 10}},
+		{[]float64{-1000, 100, 300, 400, 600}, 0.117906, IRROptions{1e-5, 10}},
+	}
+	for _, tc := range testCases {
+		irr := IRR(tc.cashflows, tc.options)
+		if !math.IsNaN(irr) && !almostEqual(tc.expected, irr) {
+			t.Errorf("IRR calculated = %f, expected = %f", irr, tc.expected)
+		} else if math.IsNaN(irr) && !math.IsNaN(tc.expected) {
+			t.Errorf("IRR = NaN, exptected = %f", tc.expected)
+		}
+	}
+}
+
+func TestIRRWithOptions(t *testing.T) {
 	testCases := []struct {
 		cashflows []float64
 		expected  float64

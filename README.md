@@ -1,11 +1,20 @@
 # fin
 
-Go library for financial calculations
+Go library for financial calculations.
 
 [![GoDoc][godoc badge]][godoc link]
 [![Go Report Card][report badge]][report card]
 [![License Badge][license badge]][LICENSE]
 
+## Overview
+
+[fin][] provides the following financial calculations:
+
+- Various financial ratios (e.g., ROIC, ROE, TIE)
+- Internal Rate of Return (IRR) & Modified Internal Rate of Return (MIRR)
+- Net Present Value (NPV)
+- Payback Period & Discounted Payback Period
+- Monte Carlo Simulation (MCS) — not fully implemented
 
 ## Installation
 

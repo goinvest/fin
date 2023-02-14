@@ -49,7 +49,7 @@ func setupNRCFs(start, end int, cashflows []Cashflow) ([]nrcf, error) {
 // periods.
 func newNRCF(start, end int, cashflow Cashflow) (nrcf, error) {
 	cf := nrcf{
-		outflow: cashflow.Outflow,
+		outflow: cashflow.IsOutflow,
 		start:   start,
 		end:     end,
 		dist:    cashflow.Dist,

@@ -27,7 +27,7 @@ func TestMIRR(t *testing.T) {
 		if !math.IsInf(mirr, 1) && !almostEqual(tc.expected, mirr) {
 			t.Errorf("MIRR calculated = %f, expected = %f", mirr, tc.expected)
 		} else if math.IsInf(mirr, 1) && !math.IsInf(tc.expected, 1) {
-			t.Errorf("MIRR = +Inf, exptected = %f", tc.expected)
+			t.Errorf("MIRR = +Inf, expected = %f", tc.expected)
 		}
 	}
 }
@@ -46,7 +46,7 @@ func TestIRR(t *testing.T) {
 		if !math.IsNaN(irr) && !almostEqual(tc.expected, irr) {
 			t.Errorf("IRR calculated = %f, expected = %f", irr, tc.expected)
 		} else if math.IsNaN(irr) && !math.IsNaN(tc.expected) {
-			t.Errorf("IRR = NaN, exptected = %f", tc.expected)
+			t.Errorf("IRR = NaN, expected = %f", tc.expected)
 		}
 	}
 }
@@ -65,7 +65,7 @@ func TestIRRWithOptions(t *testing.T) {
 		if !math.IsNaN(irr) && !almostEqual(tc.expected, irr) {
 			t.Errorf("IRR calculated = %f, expected = %f", irr, tc.expected)
 		} else if math.IsNaN(irr) && !math.IsNaN(tc.expected) {
-			t.Errorf("IRR = NaN, exptected = %f", tc.expected)
+			t.Errorf("IRR = NaN, expected = %f", tc.expected)
 		}
 	}
 }
@@ -85,7 +85,7 @@ func TestDiscountedPaybackPeriod(t *testing.T) {
 		if !math.IsNaN(paybackPeriod) && !almostEqual(tc.expected, paybackPeriod) {
 			t.Errorf("Payback Period calculated = %f, expected = %f", paybackPeriod, tc.expected)
 		} else if math.IsNaN(paybackPeriod) && !math.IsNaN(tc.expected) {
-			t.Errorf("Payback Period = NaN, exptected = %f", tc.expected)
+			t.Errorf("Payback Period = NaN, expected = %f", tc.expected)
 		}
 	}
 }
@@ -104,7 +104,7 @@ func TestPaybackPeriod(t *testing.T) {
 		if !math.IsNaN(paybackPeriod) && !almostEqual(tc.expected, paybackPeriod) {
 			t.Errorf("Payback Period calculated = %f, expected = %f", paybackPeriod, tc.expected)
 		} else if math.IsNaN(paybackPeriod) && !math.IsNaN(tc.expected) {
-			t.Errorf("Payback Period = NaN, exptected = %f", tc.expected)
+			t.Errorf("Payback Period = NaN, expected = %f", tc.expected)
 		}
 	}
 }

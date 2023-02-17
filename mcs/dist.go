@@ -19,7 +19,7 @@ func (f Fixed) Randomize(src rand.Source) Rander {
 	return distuvx.NewFixed(float64(f))
 }
 
-// PERT setups up a new PERT distribution.
+// PERT setups up a new PERT distribution with the values min, max, mode.
 type PERT []float64
 
 // Randomize sets up a new PERT distribution.
@@ -27,10 +27,10 @@ func (p PERT) Randomize(src rand.Source) Rander {
 	if len(p) != 3 {
 		panic("wrong number of PERT arguments")
 	}
-	return distuvx.NewPERT(p[0], p[2], p[1], src)
+	return distuvx.NewPERT(p[0], p[1], p[2], src)
 }
 
-// Triangle is a triangle distribution with the values min, mode, max.
+// Triangle is a triangle distribution with the values min, max, mode.
 type Triangle []float64
 
 // Randomize sets up a new triangle distribution.
@@ -38,7 +38,7 @@ func (t Triangle) Randomize(src rand.Source) Rander {
 	if len(t) != 3 {
 		return distuv.NewTriangle(1, 0, 0, src)
 	}
-	return distuv.NewTriangle(t[0], t[2], t[1], src)
+	return distuv.NewTriangle(t[0], t[1], t[2], src)
 }
 
 // TriangleOne use a triangle distribution once and then returns the same number
@@ -50,7 +50,7 @@ func (t TriangleOne) Randomize(src rand.Source) Rander {
 	if len(t) != 3 {
 		return distuv.NewTriangle(1, 0, 0, src)
 	}
-	triangle := distuv.NewTriangle(t[0], t[2], t[1], src)
+	triangle := distuv.NewTriangle(t[0], t[1], t[2], src)
 	return distuvx.NewFixed(triangle.Rand())
 }
 

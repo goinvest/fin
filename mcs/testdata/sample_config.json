@@ -1,0 +1,64 @@
+{
+  "name": "Buy",
+  "startPeriod": 1,
+  "endPeriod": 48,
+  "sims": 10,
+  "growthRates": [
+    {
+      "name": "revenueGrowth",
+      "apply": "13,25,37",
+      "dist": {
+        "type": "tri",
+        "min": -0.15,
+        "max": 0.35,
+        "mode": 0.15
+      }
+    },
+    {
+      "name": "expenseGrowth",
+      "apply": "13,25,37",
+      "dist": {
+        "type": "tri",
+        "min": 0.0,
+        "max": 0.03,
+        "mode": 0.01
+      }
+    }
+  ],
+  "cashflows": [
+    {
+      "name": "Revenues",
+      "outflow": false,
+      "apply": "1-48",
+      "dist": {
+        "type": "tri",
+        "min": 50,
+        "max": 100,
+        "mode": 70
+      },
+      "growth": "revenueGrowth"
+    },
+    {
+      "name": "Variable Expenses",
+      "outflow": true,
+      "apply": "1-48",
+      "dist": {
+        "type": "pert",
+        "min": 30,
+        "max": 65,
+        "mode": 42
+      },
+      "growth": "expenseGrowth"
+    },
+    {
+      "name": "Fixed Expenses",
+      "dir": "out",
+      "apply": "25-48",
+      "dist": {
+        "type": "fixed",
+        "val": 5
+      },
+      "growth": "none"
+    }
+  ]
+}

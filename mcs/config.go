@@ -7,6 +7,7 @@ package mcs
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 )
 
@@ -16,8 +17,6 @@ type Config struct {
 	StartPeriod int        `json:"startPeriod"`
 	EndPeriod   int        `json:"endPeriod"`
 	Sims        int        `json:"sims"`
-	Seed        uint64     `json:"seed"`
-	NumCPUs     int        `json:"cpus"`
 	Cashflows   []Cashflow `json:"cashflows"`
 }
 
@@ -34,10 +33,6 @@ func ParseFile(filename string) (Config, error) {
 // Parse converts the byte slice into a Config struct.
 func Parse(b []byte) (Config, error) {
 	var c Config
-	err := json.Unmarshal(b, &c)
-	if err != nil {
-		return c, err
-	}
 	var aux struct {
 		Name        string `json:"name"`
 		StartPeriod int    `json:"startPeriod"`
@@ -47,28 +42,76 @@ func Parse(b []byte) (Config, error) {
 		Cashflows   []cf   `json:"cashflows"`
 	}
 
+	err := json.Unmarshal(b, &aux)
+	if err != nil {
+		return c, err
+	}
 	c.Name = aux.Name
 	c.StartPeriod = aux.StartPeriod
 	c.EndPeriod = aux.EndPeriod
 	c.Sims = aux.Sims
 
-	// Create each growth randomizer.
-	for _, g := range aux.GrowthRates {
-		switch g.Dist.Type {
-		case "tri":
-
+	// Create each growth rate.
+	growthRates := make(map[string]Growth)
+	for _, gr := range aux.GrowthRates {
+		thisGrowthRate := Growth{
+			Name:    gr.Name,
+			Periods: gr.Apply,
 		}
+		switch gr.Dist.Type {
+		case "tri":
+			// FIXME(mdr): I'm hard coding the min, max, mode, which is wrong.
+			thisGrowthRate.Dist = Triangle{1.0, 10.0, 5.0}
+		case "pert":
+			// FIXME(mdr): I'm hard coding the min, max, mode, which is wrong.
+			thisGrowthRate.Dist = PERT{1.0, 10.0, 5.0}
+		case "fixed":
+			thisGrowthRate.Dist = Fixed(1.0)
+		default:
+			// FIXME(mdr): I'm missing other distribution types.
+			return c, fmt.Errorf("bad distribution type %v in growth rate %v", gr.Dist.Type, gr.Name)
+		}
+		growthRates[gr.Name] = thisGrowthRate
+	}
+
+	// Create each cashflow.
+	c.Cashflows = make([]Cashflow, len(aux.Cashflows))
+	for i, cf := range aux.Cashflows {
+		thisCashflow := Cashflow{
+			Name:      cf.Name,
+			IsOutflow: cf.IsOutflow,
+			Periods:   cf.Apply,
+		}
+
+		// Determine distribution type for this cashflow.
+		switch cf.Dist.Type {
+		case "tri":
+			// FIXME(mdr): I'm hard coding the min, max, mode, which is wrong.
+			thisCashflow.Dist = Triangle{1.0, 10.0, 5.0}
+		case "pert":
+			// FIXME(mdr): I'm hard coding the min, max, mode, which is wrong.
+			thisCashflow.Dist = PERT{1.0, 10.0, 5.0}
+		case "fixed":
+			thisCashflow.Dist = Fixed(1.0)
+		default:
+			// FIXME(mdr): I'm missing other distribution types.
+			return c, fmt.Errorf("bad distribution type %v in cashflow %v", cf.Dist.Type, cf.Name)
+		}
+
+		// Apply growth rate to this cash flow.
+
+		c.Cashflows[i] = thisCashflow
 	}
 
 	return c, nil
 }
 
 type cf struct {
-	Name   string `json:"name"`
-	Dir    string `json:"dir"`
-	Apply  string `json:"apply"`
-	Dist   dist   `json:"dist"`
-	Growth string `json:"growth"`
+	Name      string `json:"name"`
+	IsOutflow bool   `json:"outflow"`
+	Apply     string `json:"apply"`
+	Dist      dist   `json:"dist"`
+	Growth    string `json:"growth"`
 }
 
 type gr struct {

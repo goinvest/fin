@@ -27,12 +27,12 @@ func ParseFile(filename string) (Config, error) {
 	if err != nil {
 		return c, err
 	}
-	return Parse(b)
+	err = json.Unmarshal(b, &c)
+	return c, err
 }
 
-// Parse converts the byte slice into a Config struct.
-func Parse(b []byte) (Config, error) {
-	var c Config
+// UnmarshalJSON unmarshals the given JSON byte slice into a Config struct.
+func (c *Config) UnmarshalJSON(b []byte) error {
 	var aux struct {
 		Name        string `json:"name"`
 		StartPeriod int    `json:"startPeriod"`
@@ -44,7 +44,7 @@ func Parse(b []byte) (Config, error) {
 
 	err := json.Unmarshal(b, &aux)
 	if err != nil {
-		return c, err
+		return err
 	}
 	c.Name = aux.Name
 	c.StartPeriod = aux.StartPeriod
@@ -69,7 +69,7 @@ func Parse(b []byte) (Config, error) {
 			thisGrowthRate.Dist = Fixed(1.0)
 		default:
 			// FIXME(mdr): I'm missing other distribution types.
-			return c, fmt.Errorf("bad distribution type %v in growth rate %v", gr.Dist.Type, gr.Name)
+			return fmt.Errorf("bad distribution type %v in growth rate %v", gr.Dist.Type, gr.Name)
 		}
 		growthRates[gr.Name] = thisGrowthRate
 	}
@@ -95,7 +95,7 @@ func Parse(b []byte) (Config, error) {
 			thisCashflow.Dist = Fixed(1.0)
 		default:
 			// FIXME(mdr): I'm missing other distribution types.
-			return c, fmt.Errorf("bad distribution type %v in cashflow %v", cf.Dist.Type, cf.Name)
+			return fmt.Errorf("bad distribution type %v in cashflow %v", cf.Dist.Type, cf.Name)
 		}
 
 		// Apply growth rate to this cash flow.
@@ -103,7 +103,7 @@ func Parse(b []byte) (Config, error) {
 		c.Cashflows[i] = thisCashflow
 	}
 
-	return c, nil
+	return nil
 }
 
 type cf struct {

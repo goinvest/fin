@@ -58,18 +58,37 @@ func (c *Config) UnmarshalJSON(b []byte) error {
 			Name:    gr.Name,
 			Periods: gr.Apply,
 		}
-		switch gr.Dist.Type {
+
+		grDistType, err := determineDistType(gr.Dist)
+		if err != nil {
+			return err
+		}
+
+		switch grDistType {
 		case "tri":
-			// FIXME(mdr): I'm hard coding the min, max, mode, which is wrong.
-			thisGrowthRate.Dist = NewTriangle(1.0, 10.0, 5.0)
+			var t Triangle
+			err := json.Unmarshal(gr.Dist, &t)
+			if err != nil {
+				return err
+			}
+			thisGrowthRate.Dist = t
 		case "pert":
-			// FIXME(mdr): I'm hard coding the min, max, mode, which is wrong.
-			thisGrowthRate.Dist = NewPERT(1.0, 10.0, 5.0)
+			var p PERT
+			err := json.Unmarshal(gr.Dist, &p)
+			if err != nil {
+				return err
+			}
+			thisGrowthRate.Dist = p
 		case "fixed":
-			thisGrowthRate.Dist = NewFixed(1.0)
+			var f Fixed
+			err := json.Unmarshal(gr.Dist, &f)
+			if err != nil {
+				return err
+			}
+			thisGrowthRate.Dist = f
 		default:
 			// FIXME(mdr): I'm missing other distribution types.
-			return fmt.Errorf("bad distribution type %v in growth rate %v", gr.Dist.Type, gr.Name)
+			return fmt.Errorf("bad distribution type %v in growth rate %v", grDistType, gr.Name)
 		}
 		growthRates[gr.Name] = thisGrowthRate
 	}
@@ -83,19 +102,37 @@ func (c *Config) UnmarshalJSON(b []byte) error {
 			Periods:   cf.Apply,
 		}
 
+		cfDistType, err := determineDistType(cf.Dist)
+		if err != nil {
+			return err
+		}
+
 		// Determine distribution type for this cashflow.
-		switch cf.Dist.Type {
+		switch cfDistType {
 		case "tri":
-			// FIXME(mdr): I'm hard coding the min, max, mode, which is wrong.
-			thisCashflow.Dist = NewTriangle(1.0, 10.0, 5.0)
+			var t Triangle
+			err := json.Unmarshal(cf.Dist, &t)
+			if err != nil {
+				return err
+			}
+			thisCashflow.Dist = t
 		case "pert":
-			// FIXME(mdr): I'm hard coding the min, max, mode, which is wrong.
-			thisCashflow.Dist = NewPERT(1.0, 10.0, 5.0)
+			var p PERT
+			err := json.Unmarshal(cf.Dist, &p)
+			if err != nil {
+				return err
+			}
+			thisCashflow.Dist = p
 		case "fixed":
-			thisCashflow.Dist = NewFixed(1.0)
+			var f Fixed
+			err := json.Unmarshal(cf.Dist, &f)
+			if err != nil {
+				return err
+			}
+			thisCashflow.Dist = f
 		default:
 			// FIXME(mdr): I'm missing other distribution types.
-			return fmt.Errorf("bad distribution type %v in cashflow %v", cf.Dist.Type, cf.Name)
+			return fmt.Errorf("bad distribution type %v in cashflow %v", cfDistType, cf.Name)
 		}
 
 		// Apply growth rate to this cash flow.
@@ -107,20 +144,26 @@ func (c *Config) UnmarshalJSON(b []byte) error {
 }
 
 type cf struct {
-	Name      string `json:"name"`
-	IsOutflow bool   `json:"outflow"`
-	Apply     string `json:"apply"`
-	Dist      dist   `json:"dist"`
-	Growth    string `json:"growth"`
+	Name      string          `json:"name"`
+	IsOutflow bool            `json:"outflow"`
+	Apply     string          `json:"apply"`
+	Dist      json.RawMessage `json:"dist"`
+	Growth    string          `json:"growth"`
 }
 
 type gr struct {
-	Name  string `json:"name"`
-	Apply string `json:"apply"`
-	Dist  dist   `json:"dist"`
+	Name  string          `json:"name"`
+	Apply string          `json:"apply"`
+	Dist  json.RawMessage `json:"dist"`
 }
 
-type dist struct {
-	Type string                 `json:"type"`
-	X    map[string]interface{} `json:"-"`
+func determineDistType(data []byte) (string, error) {
+	var aux struct {
+		Type string `json:"type"`
+	}
+	err := json.Unmarshal(data, &aux)
+	if err != nil {
+		return "", err
+	}
+	return aux.Type, nil
 }

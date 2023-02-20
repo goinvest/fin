@@ -83,8 +83,8 @@ func (t *TriangleOne) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
-	if aux.Type != "triOne" {
-		return fmt.Errorf("instead of triOne type distribution found %s", aux.Type)
+	if aux.Type != "tri_one" {
+		return fmt.Errorf("instead of tri_one type distribution found %s", aux.Type)
 	}
 	*t = NewTriangleOne(aux.Min, aux.Max, aux.Mode)
 	return nil

@@ -92,12 +92,12 @@ func (t *TriangleOne) UnmarshalJSON(data []byte) error {
 
 func checkTriangleParameters(min, max, mode float64) {
 	if min >= max {
-		panic("pert constraint of min < max violated")
+		panic("triangle constraint of min < max violated")
 	}
-	if min > mode {
-		panic("pert constraint of min <= mode violated")
+	if mode < min {
+		panic("triangle constraint of min <= mode violated")
 	}
 	if mode > max {
-		panic("pert constraint of mode <= max violated")
+		panic("triangle constraint of mode <= max violated")
 	}
 }

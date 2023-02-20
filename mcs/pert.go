@@ -105,7 +105,7 @@ func checkPERTArguments(min, max, mode float64) {
 	if min >= max {
 		panic("pert constraint of min < max violated")
 	}
-	if min > mode {
+	if mode < min {
 		panic("pert constraint of min <= mode violated")
 	}
 	if mode > max {

@@ -72,6 +72,13 @@ func (c *Config) UnmarshalJSON(b []byte) error {
 				return err
 			}
 			thisGrowthRate.Dist = t
+		case "tri_one":
+			var t TriangleOne
+			err := json.Unmarshal(gr.Dist, &t)
+			if err != nil {
+				return err
+			}
+			thisGrowthRate.Dist = t
 		case "pert":
 			var p PERT
 			err := json.Unmarshal(gr.Dist, &p)
@@ -111,6 +118,13 @@ func (c *Config) UnmarshalJSON(b []byte) error {
 		switch cfDistType {
 		case "tri":
 			var t Triangle
+			err := json.Unmarshal(cf.Dist, &t)
+			if err != nil {
+				return err
+			}
+			thisCashflow.Dist = t
+		case "tri_one":
+			var t TriangleOne
 			err := json.Unmarshal(cf.Dist, &t)
 			if err != nil {
 				return err

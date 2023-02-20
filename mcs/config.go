@@ -86,6 +86,20 @@ func (c *Config) UnmarshalJSON(b []byte) error {
 				return err
 			}
 			thisGrowthRate.Dist = p
+		case "pert_one":
+			var p PERTOne
+			err := json.Unmarshal(gr.Dist, &p)
+			if err != nil {
+				return err
+			}
+			thisGrowthRate.Dist = p
+		case "uniform":
+			var u Uniform
+			err := json.Unmarshal(gr.Dist, &u)
+			if err != nil {
+				return err
+			}
+			thisGrowthRate.Dist = u
 		case "fixed":
 			var f Fixed
 			err := json.Unmarshal(gr.Dist, &f)
@@ -137,6 +151,20 @@ func (c *Config) UnmarshalJSON(b []byte) error {
 				return err
 			}
 			thisCashflow.Dist = p
+		case "pert_one":
+			var p PERTOne
+			err := json.Unmarshal(cf.Dist, &p)
+			if err != nil {
+				return err
+			}
+			thisCashflow.Dist = p
+		case "uniform":
+			var u Uniform
+			err := json.Unmarshal(cf.Dist, &u)
+			if err != nil {
+				return err
+			}
+			thisCashflow.Dist = u
 		case "fixed":
 			var f Fixed
 			err := json.Unmarshal(cf.Dist, &f)

@@ -40,7 +40,6 @@ func setupNRCFs(start, end int, cashflows []Cashflow) ([]nrcf, error) {
 		}
 		nonrandomCFs = append(nonrandomCFs, cf)
 	}
-	log.Printf("Done setting up %d non-random cashflows", len(nonrandomCFs))
 	return nonrandomCFs, nil
 }
 

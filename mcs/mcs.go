@@ -11,12 +11,19 @@ import (
 	"golang.org/x/exp/rand"
 )
 
-// Rander is the interface for the Rand method.
+// Rander is the interface that wraps the Rand method.
+//
+// The Rand method returns a random sample drawn from the distribution.
 type Rander interface {
 	Rand() float64
 }
 
-// Randomizer is the interface for the Setup method.
+// Randomizer is the interface that wraps the Randomize method.
+//
+// Randomizer allows different random sources to be injected into the returned
+// Rander interface. The ability to inject random sources is why the cashflows
+// don't simply take a Rander but instead use a Randomizer for their
+// distributions.
 type Randomizer interface {
 	Randomize(src rand.Source) Rander
 }

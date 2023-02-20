@@ -61,12 +61,12 @@ func (c *Config) UnmarshalJSON(b []byte) error {
 		switch gr.Dist.Type {
 		case "tri":
 			// FIXME(mdr): I'm hard coding the min, max, mode, which is wrong.
-			thisGrowthRate.Dist = Triangle{1.0, 10.0, 5.0}
+			thisGrowthRate.Dist = NewTriangle(1.0, 10.0, 5.0)
 		case "pert":
 			// FIXME(mdr): I'm hard coding the min, max, mode, which is wrong.
-			thisGrowthRate.Dist = PERT{1.0, 10.0, 5.0}
+			thisGrowthRate.Dist = NewPERT(1.0, 10.0, 5.0)
 		case "fixed":
-			thisGrowthRate.Dist = Fixed(1.0)
+			thisGrowthRate.Dist = NewFixed(1.0)
 		default:
 			// FIXME(mdr): I'm missing other distribution types.
 			return fmt.Errorf("bad distribution type %v in growth rate %v", gr.Dist.Type, gr.Name)
@@ -87,12 +87,12 @@ func (c *Config) UnmarshalJSON(b []byte) error {
 		switch cf.Dist.Type {
 		case "tri":
 			// FIXME(mdr): I'm hard coding the min, max, mode, which is wrong.
-			thisCashflow.Dist = Triangle{1.0, 10.0, 5.0}
+			thisCashflow.Dist = NewTriangle(1.0, 10.0, 5.0)
 		case "pert":
 			// FIXME(mdr): I'm hard coding the min, max, mode, which is wrong.
-			thisCashflow.Dist = PERT{1.0, 10.0, 5.0}
+			thisCashflow.Dist = NewPERT(1.0, 10.0, 5.0)
 		case "fixed":
-			thisCashflow.Dist = Fixed(1.0)
+			thisCashflow.Dist = NewFixed(1.0)
 		default:
 			// FIXME(mdr): I'm missing other distribution types.
 			return fmt.Errorf("bad distribution type %v in cashflow %v", cf.Dist.Type, cf.Name)

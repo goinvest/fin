@@ -108,7 +108,6 @@ func (c *Config) UnmarshalJSON(b []byte) error {
 			}
 			thisGrowthRate.Dist = f
 		default:
-			// FIXME(mdr): I'm missing other distribution types.
 			return fmt.Errorf("bad distribution type %v in growth rate %v", grDistType, gr.Name)
 		}
 		growthRates[gr.Name] = thisGrowthRate
@@ -173,11 +172,13 @@ func (c *Config) UnmarshalJSON(b []byte) error {
 			}
 			thisCashflow.Dist = f
 		default:
-			// FIXME(mdr): I'm missing other distribution types.
 			return fmt.Errorf("bad distribution type %v in cashflow %v", cfDistType, cf.Name)
 		}
 
 		// Apply growth rate to this cash flow.
+		if growthRate, ok := growthRates[cf.Growth]; ok {
+			thisCashflow.Growth = growthRate
+		}
 
 		c.Cashflows[i] = thisCashflow
 	}

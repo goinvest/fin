@@ -6,6 +6,7 @@
 package mcs
 
 import (
+	"fmt"
 	"log"
 
 	"golang.org/x/exp/rand"
@@ -38,11 +39,28 @@ type Cashflow struct {
 	Growth    Growth
 }
 
+func (cf Cashflow) String() string {
+	dir := "inflow"
+	if cf.IsOutflow {
+		dir = "outflow"
+	}
+	return fmt.Sprintf("CF %s %s (periods %s) with growth %s",
+		cf.Name,
+		dir,
+		cf.Periods,
+		cf.Growth.Name,
+	)
+}
+
 // Growth models the setup information for a Growth rate.
 type Growth struct {
 	Periods string
 	Dist    Randomizer
 	Name    string
+}
+
+func (g Growth) String() string {
+	return fmt.Sprintf("%s (periods %s)", g.Name, g.Periods)
 }
 
 // NetCashflows calculates the net cashflows, cash inflows, and cash outflows

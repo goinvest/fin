@@ -46,6 +46,17 @@ func TestParseFile(t *testing.T) {
 						},
 					},
 					{
+						Name:      "Triangle One Expenses",
+						IsOutflow: true,
+						Periods:   "1-48",
+						Dist:      TriangleOne{10, 20, 14},
+						Growth: Growth{
+							Periods: "13,25,37",
+							Dist:    Triangle{0.0, 0.03, 0.01},
+							Name:    "expenseGrowth",
+						},
+					},
+					{
 						Name:      "Fixed Expenses",
 						IsOutflow: true,
 						Periods:   "25-48",
@@ -96,12 +107,27 @@ func TestParseFile(t *testing.T) {
 			t.Errorf("got %v for isOutflow of second cashflow %v", cfg.Cashflows[1].IsOutflow, tc.expected.Cashflows[1].IsOutflow)
 		}
 		if cfg.Cashflows[1].Periods != tc.expected.Cashflows[1].Periods {
-			t.Errorf("got %v for periods of first cashflow; expected %v", cfg.Cashflows[1].Periods, tc.expected.Cashflows[1].Periods)
+			t.Errorf("got %v for periods of second cashflow; expected %v", cfg.Cashflows[1].Periods, tc.expected.Cashflows[1].Periods)
 		}
 		switch v := cfg.Cashflows[1].Dist.(type) {
 		case PERT:
 		default:
 			t.Errorf("got %v / expected PERT", v)
+		}
+		// Test third cashflow.
+		if cfg.Cashflows[2].Name != tc.expected.Cashflows[2].Name {
+			t.Errorf("got %v for name of third cashflow %v", cfg.Cashflows[2].Name, tc.expected.Cashflows[2].Name)
+		}
+		if cfg.Cashflows[2].IsOutflow != tc.expected.Cashflows[2].IsOutflow {
+			t.Errorf("got %v for isOutflow of third cashflow %v", cfg.Cashflows[2].IsOutflow, tc.expected.Cashflows[2].IsOutflow)
+		}
+		if cfg.Cashflows[2].Periods != tc.expected.Cashflows[2].Periods {
+			t.Errorf("got %v for periods of third cashflow; expected %v", cfg.Cashflows[2].Periods, tc.expected.Cashflows[2].Periods)
+		}
+		switch v := cfg.Cashflows[2].Dist.(type) {
+		case PERTOne:
+		default:
+			t.Errorf("got %v / expected PERTOne", v)
 		}
 	}
 }

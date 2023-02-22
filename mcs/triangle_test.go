@@ -9,6 +9,8 @@ import (
 	"encoding/json"
 	"reflect"
 	"testing"
+
+	"golang.org/x/exp/rand"
 )
 
 func TestNewTriangle(t *testing.T) {
@@ -73,7 +75,7 @@ func TestTriangleOneUnmarshalJSON(t *testing.T) {
 		max  float64
 		mode float64
 	}{
-		{[]byte(`{"type":"triOne","min":5,"max":10,"mode":7}`), 5.0, 10.0, 7.0},
+		{[]byte(`{"type":"tri_one","min":5,"max":10,"mode":7}`), 5.0, 10.0, 7.0},
 	}
 	for _, tc := range testCases {
 		var dist TriangleOne
@@ -92,6 +94,14 @@ func TestTriangleOneUnmarshalJSON(t *testing.T) {
 		}
 		if dist.mode != tc.mode {
 			t.Errorf("wrong mode. expected %v / got %v", tc.mode, dist.mode)
+		}
+		// Since this is a triangle one distribution, the same value should always
+		// be returned.
+		r := dist.Randomize(rand.NewSource(1234))
+		value1 := r.Rand()
+		value2 := r.Rand()
+		if value1 != value2 {
+			t.Errorf("expected same value each time. got %v and then got %v", value1, value2)
 		}
 	}
 }

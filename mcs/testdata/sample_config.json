@@ -51,6 +51,18 @@
       "growth": "expenseGrowth"
     },
     {
+      "name": "Triangle One Expenses",
+      "outflow": true,
+      "apply": "1-48",
+      "dist": {
+        "type": "pert_one",
+        "min": 10,
+        "max": 20,
+        "mode": 14
+      },
+      "growth": "expenseGrowth"
+    },
+    {
       "name": "Fixed Expenses",
       "dir": "out",
       "apply": "25-48",

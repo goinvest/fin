@@ -35,6 +35,12 @@ func (u Uniform) Randomize(src rand.Source) Rander {
 	}
 }
 
+// String implements the io.Stringer interface.
+func (u Uniform) String() string {
+	return fmt.Sprintf("Uniform distribution with %f min, %f max",
+		u.min, u.max)
+}
+
 // UnmarshalJSON unmarshals the given JSON data into a PERT MCS distribution.
 func (u *Uniform) UnmarshalJSON(data []byte) error {
 	var aux struct {

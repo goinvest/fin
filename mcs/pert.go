@@ -37,6 +37,12 @@ func (p PERT) Randomize(src rand.Source) Rander {
 	return distuvx.NewPERT(p.min, p.max, p.mode, src)
 }
 
+// String implements the io.Stringer interface.
+func (p PERT) String() string {
+	return fmt.Sprintf("PERT distribution with %f min, %f max, %f mode",
+		p.min, p.max, p.mode)
+}
+
 // UnmarshalJSON unmarshals the given JSON data into a PERT MCS distribution.
 func (p *PERT) UnmarshalJSON(data []byte) error {
 	var aux struct {
@@ -77,8 +83,19 @@ func NewPERTOne(min, max, mode float64) PERTOne {
 	}
 }
 
+// Randomize sets up a new one-time only PERT distribution.
+func (po PERTOne) Randomize(src rand.Source) Rander {
+	return distuvx.NewPERTOne(po.min, po.max, po.mode, src)
+}
+
+// String implements the io.Stringer interface.
+func (po PERTOne) String() string {
+	return fmt.Sprintf("One time PERT with %f min, %f max, %f mode",
+		po.min, po.max, po.mode)
+}
+
 // UnmarshalJSON unmarshals the given JSON data into a PERT MCS distribution.
-func (p *PERTOne) UnmarshalJSON(data []byte) error {
+func (po *PERTOne) UnmarshalJSON(data []byte) error {
 	var aux struct {
 		Type string  `json:"type"`
 		Min  float64 `json:"min"`
@@ -92,13 +109,8 @@ func (p *PERTOne) UnmarshalJSON(data []byte) error {
 	if aux.Type != "pert_one" {
 		return fmt.Errorf("instead of pert_one type distribution found %s", aux.Type)
 	}
-	*p = NewPERTOne(aux.Min, aux.Max, aux.Mode)
+	*po = NewPERTOne(aux.Min, aux.Max, aux.Mode)
 	return nil
-}
-
-// Randomize sets up a new one-time only PERT distribution.
-func (p PERTOne) Randomize(src rand.Source) Rander {
-	return distuvx.NewPERTOne(p.min, p.max, p.mode, src)
 }
 
 func checkPERTArguments(min, max, mode float64) {

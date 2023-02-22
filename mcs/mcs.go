@@ -27,6 +27,7 @@ type Rander interface {
 // distributions.
 type Randomizer interface {
 	Randomize(src rand.Source) Rander
+	String() string
 }
 
 // Cashflow models the setup information needed for a cashflow for the

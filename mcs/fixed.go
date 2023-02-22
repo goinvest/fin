@@ -26,6 +26,11 @@ func (f Fixed) Randomize(src rand.Source) Rander {
 	return distuvx.NewFixed(float64(f))
 }
 
+// String implements the io.Stringer interface.
+func (f Fixed) String() string {
+	return fmt.Sprintf("Fixed value of %f", f)
+}
+
 // UnmarshalJSON unmarshals the given JSON data into a Fixed MCS distribution.
 func (f *Fixed) UnmarshalJSON(data []byte) error {
 	var aux struct {

@@ -33,6 +33,12 @@ func (t Triangle) Randomize(src rand.Source) Rander {
 	return distuv.NewTriangle(t.min, t.max, t.max, src)
 }
 
+// String implements the io.Stringer interface.
+func (t Triangle) String() string {
+	return fmt.Sprintf("Triangle distribution with %f min, %f max, %f mode",
+		t.min, t.max, t.mode)
+}
+
 // UnmarshalJSON unmarshals the given JSON data into a PERT MCS distribution.
 func (t *Triangle) UnmarshalJSON(data []byte) error {
 	var aux struct {
@@ -66,13 +72,19 @@ func NewTriangleOne(min, max, mode float64) TriangleOne {
 }
 
 // Randomize sets up a new one-time only triangle distribution.
-func (t TriangleOne) Randomize(src rand.Source) Rander {
-	triangle := distuv.NewTriangle(t.min, t.max, t.mode, src)
+func (to TriangleOne) Randomize(src rand.Source) Rander {
+	triangle := distuv.NewTriangle(to.min, to.max, to.mode, src)
 	return distuvx.NewFixed(triangle.Rand())
 }
 
+// String implements the io.Stringer interface.
+func (to TriangleOne) String() string {
+	return fmt.Sprintf("One time triangle with %f min, %f max, %f mode",
+		to.min, to.max, to.mode)
+}
+
 // UnmarshalJSON unmarshals the given JSON data into a PERT MCS distribution.
-func (t *TriangleOne) UnmarshalJSON(data []byte) error {
+func (to *TriangleOne) UnmarshalJSON(data []byte) error {
 	var aux struct {
 		Type string  `json:"type"`
 		Min  float64 `json:"min"`
@@ -86,7 +98,7 @@ func (t *TriangleOne) UnmarshalJSON(data []byte) error {
 	if aux.Type != "tri_one" {
 		return fmt.Errorf("instead of tri_one type distribution found %s", aux.Type)
 	}
-	*t = NewTriangleOne(aux.Min, aux.Max, aux.Mode)
+	*to = NewTriangleOne(aux.Min, aux.Max, aux.Mode)
 	return nil
 }
 

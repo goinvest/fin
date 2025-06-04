@@ -22,7 +22,6 @@ Go library for financial calculations.
 $ go get github.com/goinvest/fin
 ```
 
-
 ## Contributing
 
 Contributions are welcome! To contribute please:
@@ -37,13 +36,13 @@ Contributions are welcome! To contribute please:
 Prior to submitting a [pull request][], please run:
 
 ```bash
-$ make check
+$ just check
 ```
 
 To update and view the test coverage report:
 
 ```bash
-$ make cover
+$ just cover
 ```
 
 ## License

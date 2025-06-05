@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The goinvest/fin developers. All rights reserved.
+// Copyright (c) 2019-2025 The goinvest/fin developers. All rights reserved.
 // Project site: https://github.com/goinvest/fin
 // Use of this source code is governed by a MIT-style license that
 // can be found in the LICENSE file for the project.
@@ -31,7 +31,12 @@ func TestMinSimsPerCPU(t *testing.T) {
 		}
 		for i := range got {
 			if got[i] != tc.expected[i] {
-				t.Errorf("wrong num sims for cpu %v; got = %v / expected = %v", i, got[i], tc.expected[i])
+				t.Errorf(
+					"wrong num sims for cpu %v; got = %v / expected = %v",
+					i,
+					got[i],
+					tc.expected[i],
+				)
 			}
 		}
 	}

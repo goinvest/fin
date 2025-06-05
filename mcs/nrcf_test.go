@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2023 The goinvest/fin developers. All rights reserved.
+// Copyright (c) 2019-2025 The goinvest/fin developers. All rights reserved.
 // Project site: https://github.com/goinvest/fin
 // Use of this source code is governed by a MIT-style license that
 // can be found in the LICENSE file for the project.
@@ -7,11 +7,8 @@ package mcs
 
 import (
 	"log"
-	"math"
 	"testing"
 )
-
-const tolerance = 0.000001
 
 func TestParsePeriods(t *testing.T) {
 	testCases := []struct {
@@ -35,8 +32,4 @@ func TestParsePeriods(t *testing.T) {
 			}
 		}
 	}
-}
-
-func almostEqual(f1, f2 float64) bool {
-	return math.Abs(f1-f2) < tolerance
 }

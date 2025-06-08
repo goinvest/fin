@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2023 The goinvest/fin developers. All rights reserved.
+// Copyright (c) 2019-2025 The goinvest/fin developers. All rights reserved.
 // Project site: https://github.com/goinvest/fin
 // Use of this source code is governed by a MIT-style license that
 // can be found in the LICENSE file for the project.
@@ -38,8 +38,8 @@ func TestIRR(t *testing.T) {
 		expected  float64
 		options   IRROptions
 	}{
-		{[]float64{-1000, 500, 400, 300, 100}, 0.144888, IRROptions{1e-5, 10}},
-		{[]float64{-1000, 100, 300, 400, 600}, 0.117906, IRROptions{1e-5, 10}},
+		{[]float64{-1000, 500, 400, 300, 100}, 0.144888, IRROptions{0.0, 1e-5, 10}},
+		{[]float64{-1000, 100, 300, 400, 600}, 0.117906, IRROptions{0.0, 1e-5, 10}},
 	}
 	for _, tc := range testCases {
 		irr := IRR(tc.cashflows, tc.options)

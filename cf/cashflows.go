@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2023 The goinvest/fin developers. All rights reserved.
+// Copyright (c) 2019-2025 The goinvest/fin developers. All rights reserved.
 // Project site: https://github.com/goinvest/fin
 // Use of this source code is governed by a MIT-style license that
 // can be found in the LICENSE file for the project.
@@ -10,6 +10,7 @@ import (
 )
 
 type IRROptions struct {
+	InitialGuess  float64
 	RelError      float64
 	MaxIterations int
 }
@@ -23,18 +24,25 @@ type IRROptions struct {
 //
 // NPV = 0 = ∑(CF_n / (1 + IRR)^n) for n=0...N
 func IRR(cashflows []float64, opts ...IRROptions) float64 {
-	// The IRR is calculated using the Newton-Raphson method.
+	// Default options.
+	initialGuess := 0.0
 	relError := 1e-8
 	maxIterations := 100
+
+	// Override default options if provided.
+	if len(opts) > 0 && opts[0].InitialGuess != 0.0 {
+		initialGuess = opts[0].InitialGuess
+	}
 	if len(opts) > 0 && opts[0].RelError != 0.0 {
 		relError = opts[0].RelError
 	}
 	if len(opts) > 0 && opts[0].MaxIterations != 0 {
 		maxIterations = opts[0].MaxIterations
 	}
-	k0, k1 := 1.0, 0.0
+
+	// Calculated the IRR using the Newton-Raphson method.
+	k0, k1 := initialGuess, 0.0
 	for i := 0; i < maxIterations; i++ {
-		k0 = k1
 		f, fdk := 0.0, 0.0
 		for i, cf := range cashflows {
 			n := float64(i)
@@ -48,6 +56,7 @@ func IRR(cashflows []float64, opts ...IRROptions) float64 {
 		if math.Abs(k1-k0)/k0 < relError {
 			return k1
 		}
+		k0 = k1
 	}
 	return math.NaN()
 }

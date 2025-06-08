@@ -43,9 +43,20 @@ outdated:
   # (requires https://github.com/psampaz/go-mod-outdated).
   go list -u -m -json all | go-mod-outdated -update -direct
 
+# Update the given module to the latest version.
+[group('dependencies')]
+update mod:
+  go get -u {{mod}}
+  go mod tidy
+
+# Update all modules.
+[group('dependencies')]
+updateall:
+  go get -u
+  go mod tidy
+
 # Run go mod tidy and verify.
 [group('dependencies')]
 tidy:
   go mod tidy
   go mod verify
-

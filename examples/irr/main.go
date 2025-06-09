@@ -14,6 +14,6 @@ import (
 func main() {
 
 	cashflows := []float64{-1000, 500, 400, 300, 100}
-	irr := cf.IRR(cashflows)
+	irr, _ := cf.IRR(cashflows)
 	log.Printf("IRR = %f", irr)
 }

@@ -32,17 +32,20 @@ func TestMIRR(t *testing.T) {
 	}
 }
 
-func TestIRR(t *testing.T) {
+func TestIRRWithOptions(t *testing.T) {
 	testCases := []struct {
 		cashflows []float64
 		expected  float64
 		options   IRROptions
 	}{
-		{[]float64{-1000, 500, 400, 300, 100}, 0.144888, IRROptions{0.0, 1e-5, 10}},
-		{[]float64{-1000, 100, 300, 400, 600}, 0.117906, IRROptions{0.0, 1e-5, 10}},
+		{[]float64{-1000, 500, 400, 300, 100}, 0.144888, IRROptions{0.0, 1e-5, Absolute, 10}},
+		{[]float64{-1000, 100, 300, 400, 600}, 0.117906, IRROptions{0.0, 1e-5, Absolute, 10}},
 	}
 	for _, tc := range testCases {
-		irr := IRR(tc.cashflows, tc.options)
+		irr, err := IRR(tc.cashflows, tc.options)
+		if err != nil {
+			t.Errorf("expected no error, received = %s", err)
+		}
 		if !math.IsNaN(irr) && !almostEqual(tc.expected, irr) {
 			t.Errorf("IRR calculated = %f, expected = %f", irr, tc.expected)
 		} else if math.IsNaN(irr) && !math.IsNaN(tc.expected) {
@@ -51,7 +54,7 @@ func TestIRR(t *testing.T) {
 	}
 }
 
-func TestIRRWithOptions(t *testing.T) {
+func TestIRRWithoutOptions(t *testing.T) {
 	testCases := []struct {
 		cashflows []float64
 		expected  float64
@@ -61,7 +64,13 @@ func TestIRRWithOptions(t *testing.T) {
 		{[]float64{1000, 100, 300, 400, 600}, math.NaN()},
 	}
 	for _, tc := range testCases {
-		irr := IRR(tc.cashflows)
+		irr, err := IRR(tc.cashflows)
+		if !math.IsNaN(irr) && err != nil {
+			t.Errorf("expected no error, got: %s", err)
+		}
+		if math.IsNaN(irr) && err == nil {
+			t.Errorf("expected an error, got nil with IRR = %f", irr)
+		}
 		if !math.IsNaN(irr) && !almostEqual(tc.expected, irr) {
 			t.Errorf("IRR calculated = %f, expected = %f", irr, tc.expected)
 		} else if math.IsNaN(irr) && !math.IsNaN(tc.expected) {

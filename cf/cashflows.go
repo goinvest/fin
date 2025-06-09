@@ -6,59 +6,91 @@
 package cf
 
 import (
+	"fmt"
 	"math"
+)
+
+type ToleranceType int
+
+const (
+	Relative ToleranceType = 1
+	Absolute ToleranceType = 2
 )
 
 type IRROptions struct {
 	InitialGuess  float64
-	RelError      float64
+	Tolerance     float64
+	ToleranceType ToleranceType
 	MaxIterations int
 }
 
 // IRR calculates the Internal Rate of Return (IRR), which is the discount rate
 // for which the Net Present Value (NPV) equals zero. The IRR assumes that cash
 // flows are reinvested at the IRR, which is why the Modified IRR (MIRR) is
-// preferred. The IRR is calculated using the Newton-Raphson method. Call
-// without the optional struct to use the defaults of 1e-8 for the relative
-// error and 100 for the max iterations.
+// preferred. The IRR is calculated using Newton's Method (i.e.,
+// Newton-Raphson Method) as follows:
 //
 // NPV = 0 = ∑(CF_n / (1 + IRR)^n) for n=0...N
-func IRR(cashflows []float64, opts ...IRROptions) float64 {
+//
+// If the IRR function is called without the optional
+// struct, the following defaults will be used:
+//
+// initialGuess = 0.1
+// tolerance = 1e-8
+// toleranceType = Relative
+// maxIterations = 100
+func IRR(cashflows []float64, opts ...IRROptions) (float64, error) {
+
+	if len(cashflows) < 2 {
+		return math.NaN(), fmt.Errorf("need at least two cash flows")
+	}
+
 	// Default options.
-	initialGuess := 0.0
-	relError := 1e-8
+	initialGuess := 0.1
+	tolerance := 1e-8
+	toleranceType := Absolute
 	maxIterations := 100
 
 	// Override default options if provided.
 	if len(opts) > 0 && opts[0].InitialGuess != 0.0 {
 		initialGuess = opts[0].InitialGuess
 	}
-	if len(opts) > 0 && opts[0].RelError != 0.0 {
-		relError = opts[0].RelError
+	if len(opts) > 0 && opts[0].Tolerance != 0.0 {
+		tolerance = opts[0].Tolerance
+	}
+	if len(opts) > 0 && opts[0].ToleranceType != 0 {
+		toleranceType = opts[0].ToleranceType
 	}
 	if len(opts) > 0 && opts[0].MaxIterations != 0 {
 		maxIterations = opts[0].MaxIterations
 	}
 
-	// Calculated the IRR using the Newton-Raphson method.
-	k0, k1 := initialGuess, 0.0
+	// Calculate the IRR using the Newton-Raphson method.
+	rate := initialGuess
 	for i := 0; i < maxIterations; i++ {
 		f, fdk := 0.0, 0.0
 		for i, cf := range cashflows {
 			n := float64(i)
-			// k = discount rate, which is the IRR
-			// f = NPV = ∑n=0-N: CF_n * (1+k)^-n
-			// fdk = d/dk NPV = ∑n=0-N: -n * CF_n * (1+k)^(-n-1)
-			f += cf * math.Pow(1+k0, -n)
-			fdk -= n * cf * math.Pow(1+k0, -n-1)
+			// rate = k = discount rate, which is the IRR
+			// f (function) = NPV = ∑n=0-N: CF_n / (1+rate)^n
+			// fdk (derivative) = d/dk NPV = ∑n=0-N: -n * CF_n / (1+rate)^(n+1)
+			f += cf / math.Pow(1+rate, n)
+			fdk -= n * cf / math.Pow(1+rate, n+1)
 		}
-		k1 = k0 - (f / fdk)
-		if math.Abs(k1-k0)/k0 < relError {
-			return k1
+		if math.Abs(fdk) < 1e-12 {
+			return math.NaN(), fmt.Errorf("derivative too close to zero, cannot converge")
 		}
-		k0 = k1
+		newRate := rate - (f / fdk)
+
+		if toleranceType == Relative && math.Abs(newRate-rate)/rate < tolerance {
+			return newRate, nil
+		} else if toleranceType == Absolute && math.Abs(newRate-rate) < tolerance {
+			return newRate, nil
+		}
+		rate = newRate
 	}
-	return math.NaN()
+
+	return math.NaN(), fmt.Errorf("failed to converge after %d iterations", maxIterations)
 }
 
 // MIRR calculates the Modified Internal Rate of Return (MIRR), which is the

@@ -32,13 +32,9 @@ type IRROptions struct {
 //
 // NPV = 0 = ∑(CF_n / (1 + IRR)^n) for n=0...N
 //
-// If the IRR function is called without the optional
-// struct, the following defaults will be used:
-//
-// initialGuess = 0.1
-// tolerance = 1e-8
-// toleranceType = Relative
-// maxIterations = 100
+// If the IRR function is called without the optional struct, the defaults will
+// be initialGuess = 0.1, tolerance = 1e-8, toleranceType = Absolute, and
+// maxIterations = 100.
 func IRR(cashflows []float64, opts ...IRROptions) (float64, error) {
 
 	if len(cashflows) < 2 {
